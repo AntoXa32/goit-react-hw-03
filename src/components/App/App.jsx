@@ -1,73 +1,46 @@
-import Product from "../Product/Product";
-import BookList from "../BookList/BookList";
-import favouriteBooks from "../../favouriteBooks.json";
-import Alert from "../Alert/Alert";
-import UserMenu from "../UserMenu/UserMenu";
-import CustomButton from "../CustomButton/CustomButton";
-import ClickCounter from "../handleClick/handleClick";
-import { useState } from "react";
-import LoginForm from "../LoginForm/LoginForm";
-import SearchBar from "../SearchBar/SearchBar";
-import LangSwitcher from "../LangSwitcher/LangSwitcher";
-import CoffeeSize from "../CoffeeSize/CoffeeSize";
-import CheckBox from "../CheckBox/CheckBox";
-import LogiFormControle from "../LoginFormControle/LoginFormControle";
-import FeedbackForm from "../FeedbackForm/FeedbackForm";
+import { useState, useEffect } from "react";
+import initialcontacts from "../../contacts.json";
+import ContactList from "../ContactList/ContactList";
+import SearchBox from "../SearchBox/SearchBox";
+import ContactForm from "../ContactForm/ContactForm";
+import { nanoid } from "nanoid";
 
 export default function App() {
-  const [clicks, setClicks] = useState(0);
+  const [contacts, setContacts] = useState(() => {
+    const savedContacts = localStorage.getItem("contacts");
+    return savedContacts ? JSON.parse(savedContacts) : initialcontacts;
+  });
+  const [filter, setFilter] = useState("");
 
-  const handleClick = () => {
-    setClicks(clicks + 1);
+  useEffect(() => {
+    localStorage.setItem("contacts", JSON.stringify(contacts));
+  }, [contacts]);
+
+  const addContact = (name, number) => {
+    const newContact = {
+      id: nanoid(),
+      name,
+      number,
+    };
+    setContacts([...contacts, newContact]);
   };
 
-  const handleLogin = (userData) => {
-    console.log(userData);
-  };
+  const filterName = contacts.filter((contact) =>
+    contact.name.toLowerCase().includes(filter.toLowerCase())
+  );
 
-  const [lang, setLang] = useState("uk");
+  const deleteContact = (contactId) => {
+    setContacts((prevContacts) => {
+      return prevContacts.filter((contact) => contact.id !== contactId);
+    });
+  };
 
   return (
-    <>
-      <UserMenu />
-      <h1>Best selling</h1>
-
-      <Product name="Tacos With Lime" price={10.99} />
-      <Product
-        name="Fries and Burger"
-        imgUrl="https://images.pexels.com/photos/70497/pexels-photo-70497.jpeg?dpr=2&h=480&w=640"
-        price={14.29}
-      />
-
-      <h2>Books of the week</h2>
-      <BookList books={favouriteBooks} />
-
-      <Alert variant="info">
-        Would you like to browse our recommended products?
-      </Alert>
-      <Alert variant="error">
-        There was an error during your last transaction
-      </Alert>
-      <Alert variant="success">
-        Payment received, thank you for your purchase
-      </Alert>
-      <Alert variant="warning">
-        Please update your profile contact information
-      </Alert>
-      <ClickCounter value={clicks} onUpdate={handleClick} />
-      <ClickCounter value={clicks} onUpdate={handleClick} />
-      <button onClick={(evt) => console.log(evt)}>Second button</button>
-      <CustomButton message="Playing music!">Play some music</CustomButton>
-      <CustomButton message="Uploading your data!">Upload data</CustomButton>
-      <h1>Please login to your account!</h1>
-      <LoginForm onLogin={handleLogin} />
-      <SearchBar />
-      <p>Selected language: {lang}</p>
-      <LangSwitcher value={lang} onSelect={setLang} />
-      <CoffeeSize />
-      <CheckBox />
-      <LogiFormControle />
-      <FeedbackForm />
-    </>
+    <div>
+      <h1>Phonebook</h1>
+      <ContactForm addContact={addContact} />
+      <SearchBox value={filter} onFilter={setFilter} />
+      <ContactList contacts={filterName} onDelete={deleteContact} />
+    </div>
   );
 }
